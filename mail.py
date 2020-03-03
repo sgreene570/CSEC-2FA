@@ -32,8 +32,19 @@ def sendMail(receiver, code):
     msg = EmailMessage()
     msg["Subject"] = "Your OTP code"
     msg["From"] = GMAIL_USER
-    msg["to"] = receiver
-    msg.set_content(code)
+    msg["To"] = receiver
+    msg.add_header('Content-Type','text/html')
+    html = f"""\
+    <html>
+        <head></head>
+        <body>
+            <p>Here is your Second Factor Secret Code!</p>
+            <mark>{code}</marK>
+            </p>
+        </body>
+    </html>
+    """
+    msg.set_payload(html)
     try:
         server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
         server.ehlo()
