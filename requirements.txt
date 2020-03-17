@@ -1,3 +1,6 @@
+pyopenssl
+pymysql
 pyotp
 pyqrcode
 secrets
+sqlalchemy
