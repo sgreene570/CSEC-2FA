@@ -1,3 +1,5 @@
 # No credential files
 *creds*
+
 *pycache*
+*.pdf
