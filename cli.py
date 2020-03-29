@@ -4,9 +4,9 @@ Command line interface for running the MFA demos.
 from functools import wraps
 import click
 import sqlalchemy
-from models import Base, HOTPEntry
-from common import generateSecret, renderQRCode
-import hotp
+from supporting_code.models import Base, HOTPEntry
+from supporting_code.mfa import generateSecret, renderQRCode
+import mfa_implementations.hotp as hotp
 
 engine = sqlalchemy.create_engine('mysql+pymysql://demo:password@localhost:3306/2fa')
 

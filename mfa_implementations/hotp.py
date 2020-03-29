@@ -1,7 +1,7 @@
 """
 Standard HOTP implementation based on http://tools.ietf.org/html/rfc4226.
 """
-from common import *
+from supporting_code.mfa import *
 import hashlib
 import hmac
 

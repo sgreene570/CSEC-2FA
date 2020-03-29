@@ -2,12 +2,9 @@
 # Python 3
 # Based on https://tools.ietf.org/html/rfc6238
 
-from common import *
-from datetime import datetime
-import base64
+from supporting_code.mfa import *
 import hmac
 import hashlib
-import struct
 import time
 
 WINDOW = 30
