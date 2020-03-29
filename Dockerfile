@@ -11,5 +11,4 @@ COPY . /app
 RUN pip install pyopenssl
 RUN pip install -r requirements.txt
 
-# TODO: Entrypoint
-CMD python db_test.py
+ENTRYPOINT /bin/bash
