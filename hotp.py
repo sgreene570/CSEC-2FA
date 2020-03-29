@@ -1,35 +1,30 @@
-# HOTP Demo Code
-# Python 3
-# Based on http://tools.ietf.org/html/rfc4226
-
+"""
+Standard HOTP implementation based on http://tools.ietf.org/html/rfc4226.
+"""
 from common import *
 import hashlib
 import hmac
-import struct
 
 HOTP_WINDOW = 10
 
-def main():
-    # Get session secret
-    secret = generateSecret(16)
 
-    # Start counter at 0
-    counter = 0
-
-    url = generateURL(secret)
-    renderQRCode(url)
-
-    # Program loop to generate HOTP codes of window size
+def run_challenge(secret, counter):
     while True:
         codes = []
         for i in range(0, HOTP_WINDOW):
             codes.append(getHOTPCode(secret, counter + i))
 
-        print(codes)
-        input("Press enter for new code set")
-        print()
+        code = input("Enter HOTP code (or press enter to exit): ")
 
-        counter += 1
+        if not code:
+            return counter
+
+        if code in codes:
+            print("Success")
+            counter += codes.index(code) + 1
+        else:
+            print("Fail")
+
 
 def getHOTPCode(secret, counter):
     h = createHMAC(secret, counter)
@@ -46,14 +41,17 @@ def getHOTPCode(secret, counter):
 
     return f"{code:06d}"
 
+
 def createHMAC(secret, time):
     hasher = hmac.new(bytearray(secret, 'ascii'), getBytesFromInt(time), hashlib.sha1)
     return bytearray(hasher.digest())
+
 
 def generateURL(secret):
     return "otpauth://hotp/Test%20App:test%40test.com?secret=" + \
     b32EncodeString(secret).decode().replace('=', '') + \
     "&issuer=Test%20App"
+
 
 def getBytesFromInt(i, padding=8):
     result = bytearray()
@@ -61,6 +59,3 @@ def getBytesFromInt(i, padding=8):
         result.append(i & 0xff)
         i >>= 8
     return bytes(bytearray(reversed(result)).rjust(padding, b'\0'))
-
-if __name__ == "__main__":
-    main()

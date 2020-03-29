@@ -4,7 +4,9 @@ Command line interface for running the MFA demos.
 from functools import wraps
 import click
 import sqlalchemy
-from models import Base, User
+from models import Base, HOTPEntry
+from common import generateSecret, renderQRCode
+import hotp
 
 engine = sqlalchemy.create_engine('mysql+pymysql://demo:password@localhost:3306/2fa')
 
@@ -37,29 +39,51 @@ def cli():
 
 @cli.command()
 def init():
+    """
+    Initialize the application's database.
+    """
     Base.metadata.create_all(engine)
 
 
 @cli.command()
 def drop():
+    """
+    Reset the application's database.
+    """
     click.confirm("Are you sure?", abort=True)
 
     Base.metadata.drop_all(engine)
 
 
 @cli.command()
-@click.argument("username")
+@click.argument("name")
 @db_session
-def add(username, session):
-    user = User(name=username)
-    session.add(user)
+def enroll_hotp(name, session):
+    """
+    Enroll an new HOTP account using the given name.
+    """
+    secret = generateSecret(16)
+    session.add(HOTPEntry(name=name, secret=secret))
+
+    print("Enrollment URL for HOTP entry {}: {}".format(name, hotp.generateURL(secret)))
+    print("Here are a few test OTPs:", hotp.getHOTPCode(secret, 0), hotp.getHOTPCode(secret, 1),
+          hotp.getHOTPCode(secret, 2))
+
+    print("\nEnrollment QR code:")
+    renderQRCode(hotp.generateURL(secret))
 
 
 @cli.command()
+@click.argument("name")
 @db_session
-def list(session):
-    for user in session.query(User).all():
-        print(user)
+def auth_hotp(session, name):
+    """
+    Attempt authentication against the HOTP account with the given name.
+    """
+    entry = session.query(HOTPEntry).filter_by(name=name).first()
+    entry.counter = hotp.run_challenge(entry.secret, entry.counter)
+
+    session.add(entry)
 
 
 if __name__ == '__main__':

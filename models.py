@@ -1,14 +1,15 @@
+"""
+SQLAlchemy model/table definitions.
+"""
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String
 
 Base = declarative_base()
 
 
-class User(Base):
-    __tablename__ = 'users'
+class HOTPEntry(Base):
+    __tablename__ = 'htop'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(32))
-
-    def __repr__(self):
-        return self.name
+    name = Column(String(32), primary_key=True)
+    secret = Column(String(16))
+    counter = Column(Integer, server_default="0")
