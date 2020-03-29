@@ -1,5 +1,6 @@
 # No credential files
 *creds*
-
+venv
 *pycache*
 *.pdf
+.idea
