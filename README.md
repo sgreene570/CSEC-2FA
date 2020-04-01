@@ -19,10 +19,12 @@ Alternatively, a pre-built docker image may be pulled from [quay.io](https://qua
 
 ex:
 ```bash
-docker pull quay.io/sgreene/csec-2fa
+docker pull quay.io/sgreene570/csec-2fa
 ```
 
 # Running
+
+Start a bash session within the docker container.
 
 ```bash
 ./start-mysql.sh
