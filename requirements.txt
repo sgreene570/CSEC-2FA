@@ -1,6 +1,5 @@
 pyopenssl
 pymysql
-pyotp
 pyqrcode
 sqlalchemy
 click
