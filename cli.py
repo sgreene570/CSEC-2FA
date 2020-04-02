@@ -2,12 +2,16 @@
 Command line interface for running the MFA demos.
 """
 from functools import wraps
+from getpass import getpass
+
 import click
 import sqlalchemy
-from supporting_code.models import Base, HOTPEntry, TOTPEntry
-from supporting_code.mfa import generateSecret, renderQRCode
+
 import mfa_implementations.hotp as hotp
+import mfa_implementations.mail as mail
 import mfa_implementations.totp as totp
+from supporting_code.mfa import generateSecret, renderQRCode
+from supporting_code.models import Base, HOTPEntry, TOTPEntry, MailEntry
 
 engine = sqlalchemy.create_engine('mysql+pymysql://demo:password@localhost:3306/2fa')
 
@@ -118,6 +122,41 @@ def auth_totp(session, name):
     """
     entry = session.query(TOTPEntry).filter_by(name=name).first()
     totp.run_challenge(entry.secret)
+
+
+@cli.command()
+@click.argument("email")
+@db_session
+def send_mail(email, session):
+    """
+    Generate and send an email-based one time password to the given email.
+    """
+    code = mail.generateCode()
+
+    gmail_user = input("Enter a gmail address to send from: ")
+    gmail_password = getpass("Enter the password for that gmail account: ")
+
+    print("Sending OTP code " + "*" * len(code) + " to " + email + "...")
+    mail.sendMail(email, gmail_user, gmail_password, code)
+
+    session.add(MailEntry(email=email, code=code))
+    print("Sent")
+
+
+@cli.command()
+@click.argument("email")
+@db_session
+def auth_mail(session, email):
+    """
+    Attempt authentication using an email-based one time password that was sent to the given email address.
+    """
+    entry = session.query(MailEntry).filter_by(email=email).first()
+
+    if entry.code == input("Enter the received code: "):
+        print("Success")
+        session.delete(entry)
+    else:
+        print("Fail")
 
 
 if __name__ == "__main__":
