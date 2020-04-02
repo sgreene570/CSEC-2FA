@@ -8,8 +8,15 @@ Base = declarative_base()
 
 
 class HOTPEntry(Base):
-    __tablename__ = 'htop'
+    __tablename__ = 'hotp'
 
     name = Column(String(32), primary_key=True)
     secret = Column(String(16))
     counter = Column(Integer, server_default="0")
+
+
+class TOTPEntry(Base):
+    __tablename__ = 'totp'
+
+    name = Column(String(32), primary_key=True)
+    secret = Column(String(16))

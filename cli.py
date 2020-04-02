@@ -4,9 +4,10 @@ Command line interface for running the MFA demos.
 from functools import wraps
 import click
 import sqlalchemy
-from supporting_code.models import Base, HOTPEntry
+from supporting_code.models import Base, HOTPEntry, TOTPEntry
 from supporting_code.mfa import generateSecret, renderQRCode
 import mfa_implementations.hotp as hotp
+import mfa_implementations.totp as totp
 
 engine = sqlalchemy.create_engine('mysql+pymysql://demo:password@localhost:3306/2fa')
 
@@ -61,6 +62,8 @@ def drop():
 def enroll_hotp(name, session):
     """
     Enroll an new HOTP account using the given name.
+
+    HOTP is a counter-based one time password token.
     """
     secret = generateSecret(16)
     session.add(HOTPEntry(name=name, secret=secret))
@@ -86,5 +89,36 @@ def auth_hotp(session, name):
     session.add(entry)
 
 
-if __name__ == '__main__':
+@cli.command()
+@click.argument("name")
+@db_session
+def enroll_totp(name, session):
+    """
+    Enroll an new TOTP account using the given name.
+
+    TOTP is a time-based one time password token.
+    """
+    secret = generateSecret(16)
+    session.add(TOTPEntry(name=name, secret=secret))
+
+    print("Enrollment URL for TOTP entry {}: {}".format(name, totp.generateURL(secret)))
+    print("Here is a test OTP:", totp.getTOTPCode(secret))
+    print("(Valid for the next 30 seconds.)")
+
+    print("\nEnrollment QR code:")
+    renderQRCode(totp.generateURL(secret))
+
+
+@cli.command()
+@click.argument("name")
+@db_session
+def auth_totp(session, name):
+    """
+    Attempt authentication against the TOTP account with the given name.
+    """
+    entry = session.query(TOTPEntry).filter_by(name=name).first()
+    totp.run_challenge(entry.secret)
+
+
+if __name__ == "__main__":
     cli()
