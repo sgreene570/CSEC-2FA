@@ -13,6 +13,13 @@ import mfa_implementations.totp as totp
 from supporting_code.mfa import generateSecret, renderQRCode
 from supporting_code.models import Base, HOTPEntry, TOTPEntry, MailEntry
 
+TEXT_EMAIL_MAPPING = {
+    "att": "@txt.att.net",
+    "tmobile": "@tmomail.net",
+    "sprint": "@messaging.sprintpcs.com",
+    "verizon": "@vtext.com"
+}
+
 engine = sqlalchemy.create_engine('mysql+pymysql://demo:password@localhost:3306/2fa')
 
 
@@ -124,20 +131,15 @@ def auth_totp(session, name):
     totp.run_challenge(entry.secret)
 
 
-@cli.command()
-@click.argument("email")
 @db_session
-def send_mail(email, session):
-    """
-    Generate and send an email-based one time password to the given email.
-    """
+def send_mail(email, is_email, session):
     code = mail.generateCode()
 
     gmail_user = input("Enter a gmail address to send from: ")
     gmail_password = getpass("Enter the password for that gmail account: ")
 
     print("Sending OTP code " + "*" * len(code) + " to " + email + "...")
-    mail.sendMail(email, gmail_user, gmail_password, code)
+    mail.sendMail(email, gmail_user, gmail_password, code, is_email)
 
     session.add(MailEntry(email=email, code=code))
     print("Sent")
@@ -145,11 +147,15 @@ def send_mail(email, session):
 
 @cli.command()
 @click.argument("email")
+def send_email(email):
+    """
+    Generate and send an email-based one time password to the given email.
+    """
+    send_mail(email, True)
+
+
 @db_session
-def auth_mail(session, email):
-    """
-    Attempt authentication using an email-based one time password that was sent to the given email address.
-    """
+def auth_mail(email, session):
     entry = session.query(MailEntry).filter_by(email=email).first()
 
     if entry.code == input("Enter the received code: "):
@@ -157,6 +163,41 @@ def auth_mail(session, email):
         session.delete(entry)
     else:
         print("Fail")
+
+
+@cli.command()
+@click.argument("email")
+def auth_email(email):
+    """
+    Attempt authentication using an email-based one time password that was sent to the given email address.
+    """
+    auth_mail(email)
+
+
+def get_email(carrier, number):
+    number = number.replace("-", "")
+    assert len(number) == 10, "please use a 10 digit phone number without the country code"
+    return number + TEXT_EMAIL_MAPPING[carrier]
+
+
+@cli.command()
+@click.argument("carrier", type=click.Choice(TEXT_EMAIL_MAPPING.keys()))
+@click.argument("number")
+def send_text(carrier, number):
+    """
+    Generate and send a text-based one time password to the given number.
+    """
+    send_mail(get_email(carrier, number), False)
+
+
+@cli.command()
+@click.argument("carrier", type=click.Choice(TEXT_EMAIL_MAPPING.keys()))
+@click.argument("number")
+def auth_text(carrier, number):
+    """
+    Attempt authentication using a text-based one time password that was sent to the given number.
+    """
+    auth_mail(get_email(carrier, number))
 
 
 if __name__ == "__main__":
