@@ -1,0 +1,15 @@
+Listed below is the breakdown of contributions by each team member.
+
+Stephen Greene:
+- Created the initial versions of the MFA implementations.
+- Configured the database and docker systems.
+- Wrote the first draft of the abstract, design considerations, implementation, lessons learned, and ethical/legal issues sections.
+- Contributed to the editing of all sections.
+- Improved the poster content and design.
+
+Joel Eager:
+- Wrote the CLI and interaction flow for the MFA implementations.
+- Created the database schema used to store MFA state.
+- Wrote the first draft of the introduction, best practices, architecture, conclusions, and current status/future work sections.
+- Contributed to the editing of all sections.
+- Created the first draft of the poster.
