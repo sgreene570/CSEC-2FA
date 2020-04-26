@@ -20,6 +20,7 @@ Alternatively, a pre-built docker image may be pulled from [quay.io](https://qua
 ex:
 ```bash
 docker pull quay.io/sgreene570/csec-2fa
+docker tag quay.io/sgreene570/csec-2fa csec-2fa
 ```
 
 # Running
